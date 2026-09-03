@@ -1,6 +1,7 @@
 
 import java.util.Scanner;
 
+
 /**
  * Starts the YODA command-line application.
  */
@@ -26,48 +27,85 @@ public class Yoda {
 
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
-            String command = scanner.nextLine();
+            String input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                continue;
+            }
+
+
+            String[] parts = input.split(" ", 2);
+            String command = parts[0];
+            String arguments = parts.length > 1 ? parts[1] : "";
+
             System.out.println(separator);
 
-            if (command.equals("bye")) {
-                System.out.println("Bye. Hope to see you again soon!");
-                System.out.println(separator);
-                break;
-            }
-            else if (command.equals("list")) {
-                System.out.println("Here are the tasks in your list:");
-                for (int i = 0; i < taskCount; i++) {
-                    System.out.println((i + 1) + ". " + tasks[i]);
+            switch (command) {
+                case "bye":
+                    System.out.println("Bye. Hope to see you again soon!");
+                    System.out.println(separator);
+                    return;
+
+                case "list":
+                    System.out.println("Here are the tasks in your list:");
+                    for (int i = 0; i < taskCount; i++) {
+                        System.out.println((i + 1) + "." + tasks[i]);
+                    }
+                    break;
+
+                case "mark": {
+                    int taskIndex = Integer.parseInt(arguments) - 1;
+                    tasks[taskIndex].markAsDone();
+                    System.out.println("Nice! I've marked this task as done:");
+                    System.out.println("  " + tasks[taskIndex]);
+                    break;
                 }
-            }
-            else if (command.startsWith("mark ")) {
 
-                int taskIndex = Integer.parseInt(command.substring(5)) - 1;
-
-                tasks[taskIndex].markAsDone();
-
-                System.out.println("     Nice! I've marked this task as done:");
-                System.out.println("       " + tasks[taskIndex]);
-            }
-            else if (command.startsWith("unmark ")) {
-
-                int taskIndex = Integer.parseInt(command.substring(7)) - 1;
-
-                tasks[taskIndex].markAsUndone();
-
-                System.out.println("     Nice! I've marked this task as not done yet:");
-                System.out.println("       " + tasks[taskIndex]);
-            }
-            else {
-                tasks[taskCount] = new Task(command);
-                taskCount++;
-                for (int i = 0; i < taskCount; i++) {
-                    System.out.println((i + 1) + ". " + tasks[i]);
+                case "unmark": {
+                    int taskIndex = Integer.parseInt(arguments) - 1;
+                    tasks[taskIndex].markAsUndone();
+                    System.out.println("OK, I've marked this task as not done yet:");
+                    System.out.println("  " + tasks[taskIndex]);
+                    break;
                 }
-            }
 
+                case "todo":
+                    tasks[taskCount] = new Todo(arguments);
+                    taskCount++;
+                    printAddedTask(tasks[taskCount - 1], taskCount);
+                    break;
+
+                case "deadline": {
+                    String[] deadlineParts = arguments.split(" /by ");
+                    tasks[taskCount] = new Deadline(deadlineParts[0], deadlineParts[1]);
+                    taskCount++;
+                    printAddedTask(tasks[taskCount - 1], taskCount);
+                    break;
+                }
+
+                case "event": {
+                    String[] eventParts = arguments.split(" /from ");
+                    String description = eventParts[0];
+                    String[] timeParts = eventParts[1].split(" /to ");
+
+                    tasks[taskCount] = new Event(description, timeParts[0], timeParts[1]);
+                    taskCount++;
+                    printAddedTask(tasks[taskCount - 1], taskCount);
+                    break;
+                }
+
+                default:
+                    System.out.println("Unknown command!");
+                    break;
+            }
 
             System.out.println(separator);
         }
+    }
+
+
+    private static void printAddedTask(Task task, int taskCount) {
+        System.out.println("Got it. I've added this task:");
+        System.out.println("  " + task);
+        System.out.println("Now you have " + taskCount + " tasks in the list.");
     }
 }
