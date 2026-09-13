@@ -1,10 +1,5 @@
-
 import java.util.Scanner;
 
-
-/**
- * Starts the YODA command-line application.
- */
 public class Yoda {
 
     public static void main(String[] args) {
@@ -32,76 +27,138 @@ public class Yoda {
                 continue;
             }
 
-
             String[] parts = input.split(" ", 2);
             String command = parts[0];
             String arguments = parts.length > 1 ? parts[1] : "";
 
             System.out.println(separator);
 
-            switch (command) {
-                case "bye":
-                    System.out.println("Bye. Hope to see you again soon!");
-                    System.out.println(separator);
-                    return;
+            try {
+                switch (command) {
+                    case "bye":
+                        System.out.println("Bye. Hope to see you again soon!");
+                        System.out.println(separator);
+                        return;
 
-                case "list":
-                    System.out.println("Here are the tasks in your list:");
-                    for (int i = 0; i < taskCount; i++) {
-                        System.out.println((i + 1) + "." + tasks[i]);
+                    case "list":
+                        if (taskCount == 0) {
+                            throw new YodaException("Your task list is empty. Add a task first!");
+                        }
+                        System.out.println("Here are the tasks in your list:");
+                        for (int i = 0; i < taskCount; i++) {
+                            System.out.println((i + 1) + "." + tasks[i]);
+                        }
+                        break;
+
+                    case "mark": {
+                        if (arguments.isEmpty()) {
+                            throw new YodaException("Missing task number!\n"
+                                    + "  Correct format: mark <number>\n"
+                                    + "  Example:        mark 2");
+                        }
+                        int taskIndex = Integer.parseInt(arguments) - 1;
+                        if (taskIndex < 0 || taskIndex >= taskCount) {
+                            throw new YodaException("Task " + (taskIndex + 1) + " does not exist.\n"
+                                    + "  You currently have " + taskCount + " task(s). Please enter a number between 1 and " + taskCount + ".");
+                        }
+                        tasks[taskIndex].markAsDone();
+                        System.out.println("Nice! I've marked this task as done:");
+                        System.out.println("  " + tasks[taskIndex]);
+                        break;
                     }
-                    break;
 
-                case "mark": {
-                    int taskIndex = Integer.parseInt(arguments) - 1;
-                    tasks[taskIndex].markAsDone();
-                    System.out.println("Nice! I've marked this task as done:");
-                    System.out.println("  " + tasks[taskIndex]);
-                    break;
+                    case "unmark": {
+                        if (arguments.isEmpty()) {
+                            throw new YodaException("Missing task number!\n"
+                                    + "  Correct format: unmark <number>\n"
+                                    + "  Example:        unmark 2");
+                        }
+                        int taskIndex = Integer.parseInt(arguments) - 1;
+                        if (taskIndex < 0 || taskIndex >= taskCount) {
+                            throw new YodaException("Task " + (taskIndex + 1) + " does not exist.\n"
+                                    + "  You currently have " + taskCount + " task(s). Please enter a number between 1 and " + taskCount + ".");
+                        }
+                        tasks[taskIndex].markAsUndone();
+                        System.out.println("OK, I've marked this task as not done yet:");
+                        System.out.println("  " + tasks[taskIndex]);
+                        break;
+                    }
+
+                    case "todo": {
+                        if (arguments.isEmpty()) {
+                            throw new YodaException("Missing description!\n"
+                                    + "  Correct format: todo <description>\n"
+                                    + "  Example:        todo Read a book");
+                        }
+                        tasks[taskCount] = new Todo(arguments);
+                        taskCount++;
+                        printAddedTask(tasks[taskCount - 1], taskCount);
+                        break;
+                    }
+
+                    case "deadline": {
+                        if (arguments.isEmpty()) {
+                            throw new YodaException("Missing description and deadline!\n"
+                                    + "  Correct format: deadline <description> /by <time>\n"
+                                    + "  Example:        deadline Submit report /by Monday 6pm");
+                        }
+                        if (!arguments.contains(" /by ")) {
+                            throw new YodaException("Missing '/by' field!\n"
+                                    + "  Correct format: deadline <description> /by <time>\n"
+                                    + "  Example:        deadline Submit report /by Monday 6pm");
+                        }
+                        String[] deadlineParts = arguments.split(" /by ", 2);
+                        tasks[taskCount] = new Deadline(deadlineParts[0], deadlineParts[1]);
+                        taskCount++;
+                        printAddedTask(tasks[taskCount - 1], taskCount);
+                        break;
+                    }
+
+                    case "event": {
+                        if (arguments.isEmpty()) {
+                            throw new YodaException("Missing description and event times!\n"
+                                    + "  Correct format: event <description> /from <start> /to <end>\n"
+                                    + "  Example:        event Team meeting /from Mon 2pm /to Mon 4pm");
+                        }
+                        if (!arguments.contains(" /from ")) {
+                            throw new YodaException("Missing '/from' field!\n"
+                                    + "  Correct format: event <description> /from <start> /to <end>\n"
+                                    + "  Example:        event Team meeting /from Mon 2pm /to Mon 4pm");
+                        }
+                        String[] eventParts = arguments.split(" /from ", 2);
+                        if (!eventParts[1].contains(" /to ")) {
+                            throw new YodaException("Missing '/to' field!\n"
+                                    + "  Correct format: event <description> /from <start> /to <end>\n"
+                                    + "  Example:        event Team meeting /from Mon 2pm /to Mon 4pm");
+                        }
+                        String description = eventParts[0];
+                        String[] timeParts = eventParts[1].split(" /to ", 2);
+                        tasks[taskCount] = new Event(description, timeParts[0], timeParts[1]);
+                        taskCount++;
+                        printAddedTask(tasks[taskCount - 1], taskCount);
+                        break;
+                    }
+
+                    default:
+                        throw new YodaException("Unknown command: \"" + command + "\"\n"
+                                + "  Available commands: todo, deadline, event, mark, unmark, list, bye");
                 }
 
-                case "unmark": {
-                    int taskIndex = Integer.parseInt(arguments) - 1;
-                    tasks[taskIndex].markAsUndone();
-                    System.out.println("OK, I've marked this task as not done yet:");
-                    System.out.println("  " + tasks[taskIndex]);
-                    break;
-                }
+            } catch (YodaException e) {
+                System.out.println("OOPS! " + e.getMessage());
 
-                case "todo":
-                    tasks[taskCount] = new Todo(arguments);
-                    taskCount++;
-                    printAddedTask(tasks[taskCount - 1], taskCount);
-                    break;
+            } catch (NumberFormatException e) {
+                System.out.println("OOPS! That's not a valid number.\n"
+                        + "  Correct format: mark <number>  OR  unmark <number>\n"
+                        + "  Example:        mark 2");
 
-                case "deadline": {
-                    String[] deadlineParts = arguments.split(" /by ");
-                    tasks[taskCount] = new Deadline(deadlineParts[0], deadlineParts[1]);
-                    taskCount++;
-                    printAddedTask(tasks[taskCount - 1], taskCount);
-                    break;
-                }
-
-                case "event": {
-                    String[] eventParts = arguments.split(" /from ");
-                    String description = eventParts[0];
-                    String[] timeParts = eventParts[1].split(" /to ");
-
-                    tasks[taskCount] = new Event(description, timeParts[0], timeParts[1]);
-                    taskCount++;
-                    printAddedTask(tasks[taskCount - 1], taskCount);
-                    break;
-                }
-
-                default:
-                    System.out.println("Unknown command!");
-                    break;
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.out.println("OOPS! Your task list is full (max 100 tasks). Please remove some tasks first.");
             }
 
             System.out.println(separator);
         }
     }
-
 
     private static void printAddedTask(Task task, int taskCount) {
         System.out.println("Got it. I've added this task:");
