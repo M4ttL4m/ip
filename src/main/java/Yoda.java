@@ -3,6 +3,8 @@ import java.util.Scanner;
 public class Yoda {
 
     public static void main(String[] args) {
+        private static final int MAX_TASKS = 100;
+
         String separator = "____________________________________________________________";
         String banner = "__   __  ___  ____    _\n"
                 + "\\ \\ / / / _ \\|  _ \\  / \\\n"
@@ -17,7 +19,7 @@ public class Yoda {
         System.out.println("What can I do for you?");
         System.out.println(separator);
 
-        Task[] tasks = new Task[100];
+        Task[] tasks = new Task[MAX_TASKS];
         int taskCount = 0;
 
         Scanner scanner = new Scanner(System.in);
