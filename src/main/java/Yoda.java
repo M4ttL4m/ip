@@ -1,8 +1,8 @@
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Yoda {
 
-    private static final int MAX_TASKS = 100;
     private static final String SEPARATOR = "____________________________________________________________";
     private static final String BANNER = "__   __  ___  ____    _\n"
             + "\\ \\ / / / _ \\|  _ \\  / \\\n"
@@ -10,8 +10,7 @@ public class Yoda {
             + "  | |  | |_| | |_| / ___ \\\n"
             + "  |_|   \\___/|____/_/   \\_\\\n";
 
-    private static Task[] tasks = new Task[MAX_TASKS];
-    private static int taskCount = 0;
+    private static ArrayList<Task> tasks = new ArrayList<>();
 
     /**
      * Starts the YODA command-line application.
@@ -40,8 +39,6 @@ public class Yoda {
                 System.out.println("OOPS! That's not a valid number.\n"
                         + "  Correct format: mark <number>  OR  unmark <number>\n"
                         + "  Example:        mark 2");
-            } catch (ArrayIndexOutOfBoundsException e) {
-                System.out.println("OOPS! Your task list is full (max " + MAX_TASKS + " tasks). Please remove some tasks first.");
             }
 
             System.out.println(SEPARATOR);
@@ -82,34 +79,37 @@ public class Yoda {
             case "event":
                 handleEvent(arguments);
                 break;
+            case "delete":
+                handleDelete(arguments);
+                break;
             default:
                 throw new YodaException("Unknown command: \"" + command + "\"\n"
-                        + "  Available commands: todo, deadline, event, mark, unmark, list, bye");
+                        + "  Available commands: todo, deadline, event, mark, unmark, delete, list, bye");
         }
     }
 
     private static void handleList() throws YodaException {
-        if (taskCount == 0) {
+        if (tasks.isEmpty()) {
             throw new YodaException("Your task list is empty. Add a task first!");
         }
         System.out.println("Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println((i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i + 1) + "." + tasks.get(i));
         }
     }
 
     private static void handleMark(String arguments) throws YodaException {
         int taskIndex = parseTaskIndex(arguments, "mark");
-        tasks[taskIndex].markAsDone();
+        tasks.get(taskIndex).markAsDone();
         System.out.println("Nice! I've marked this task as done:");
-        System.out.println("  " + tasks[taskIndex]);
+        System.out.println("  " + tasks.get(taskIndex));
     }
 
     private static void handleUnmark(String arguments) throws YodaException {
         int taskIndex = parseTaskIndex(arguments, "unmark");
-        tasks[taskIndex].markAsUndone();
+        tasks.get(taskIndex).markAsUndone();
         System.out.println("OK, I've marked this task as not done yet:");
-        System.out.println("  " + tasks[taskIndex]);
+        System.out.println("  " + tasks.get(taskIndex));
     }
 
     private static void handleTodo(String arguments) throws YodaException {
@@ -118,9 +118,8 @@ public class Yoda {
                     + "  Correct format: todo <description>\n"
                     + "  Example:        todo Read a book");
         }
-        tasks[taskCount] = new Todo(arguments);
-        taskCount++;
-        printAddedTask(tasks[taskCount - 1], taskCount);
+        tasks.add(new Todo(arguments));
+        printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
     }
 
     private static void handleDeadline(String arguments) throws YodaException {
@@ -135,9 +134,8 @@ public class Yoda {
                     + "  Example:        deadline Submit report /by Monday 6pm");
         }
         String[] deadlineParts = arguments.split(" /by ", 2);
-        tasks[taskCount] = new Deadline(deadlineParts[0], deadlineParts[1]);
-        taskCount++;
-        printAddedTask(tasks[taskCount - 1], taskCount);
+        tasks.add(new Deadline(deadlineParts[0], deadlineParts[1]));
+        printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
     }
 
     private static void handleEvent(String arguments) throws YodaException {
@@ -159,9 +157,25 @@ public class Yoda {
         }
         String description = eventParts[0];
         String[] timeParts = eventParts[1].split(" /to ", 2);
-        tasks[taskCount] = new Event(description, timeParts[0], timeParts[1]);
-        taskCount++;
-        printAddedTask(tasks[taskCount - 1], taskCount);
+        tasks.add(new Event(description, timeParts[0], timeParts[1]));
+        printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
+    }
+
+    private static void handleDelete(String arguments) throws YodaException {
+        if (arguments.isEmpty()) {
+            throw new YodaException("Missing task number!\n"
+                    + "  Correct format: delete <number>\n"
+                    + "  Example:        delete 2");
+        }
+        int taskIndex = Integer.parseInt(arguments) - 1;
+        if (taskIndex < 0 || taskIndex >= tasks.size()) {
+            throw new YodaException("Task " + (taskIndex + 1) + " does not exist.\n"
+                    + "  You currently have " + tasks.size() + " task(s).");
+        }
+        Task removed = tasks.remove(taskIndex);
+        System.out.println("Noted. I've removed this task:");
+        System.out.println("  " + removed);
+        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
     }
 
     /**
@@ -174,9 +188,9 @@ public class Yoda {
                     + "  Example:        " + command + " 2");
         }
         int taskIndex = Integer.parseInt(arguments) - 1;
-        if (taskIndex < 0 || taskIndex >= taskCount) {
+        if (taskIndex < 0 || taskIndex >= tasks.size()) {
             throw new YodaException("Task " + (taskIndex + 1) + " does not exist.\n"
-                    + "  You currently have " + taskCount + " task(s). Please enter a number between 1 and " + taskCount + ".");
+                    + "  You currently have " + tasks.size() + " task(s). Please enter a number between 1 and " + tasks.size() + ".");
         }
         return taskIndex;
     }
