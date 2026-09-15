@@ -1,5 +1,10 @@
-import java.util.Scanner;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class Yoda {
 
@@ -10,6 +15,9 @@ public class Yoda {
             + "  | |  | |_| | |_| / ___ \\\n"
             + "  |_|   \\___/|____/_/   \\_\\\n";
 
+    // OS-independent relative path definition
+    private static final Path FILE_PATH = Paths.get(".", "data", "yoda.txt");
+
     private static ArrayList<Task> tasks = new ArrayList<>();
 
     /**
@@ -17,6 +25,7 @@ public class Yoda {
      */
     public static void main(String[] args) {
         printWelcome();
+        loadTasksFromDisk();
 
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
@@ -66,21 +75,27 @@ public class Yoda {
                 break;
             case "mark":
                 handleMark(arguments);
+                saveTasksToDisk();
                 break;
             case "unmark":
                 handleUnmark(arguments);
+                saveTasksToDisk();
                 break;
             case "todo":
                 handleTodo(arguments);
+                saveTasksToDisk();
                 break;
             case "deadline":
                 handleDeadline(arguments);
+                saveTasksToDisk();
                 break;
             case "event":
                 handleEvent(arguments);
+                saveTasksToDisk();
                 break;
             case "delete":
                 handleDelete(arguments);
+                saveTasksToDisk();
                 break;
             default:
                 throw new YodaException("Unknown command: \"" + command + "\"\n"
@@ -167,20 +182,13 @@ public class Yoda {
                     + "  Correct format: delete <number>\n"
                     + "  Example:        delete 2");
         }
-        int taskIndex = Integer.parseInt(arguments) - 1;
-        if (taskIndex < 0 || taskIndex >= tasks.size()) {
-            throw new YodaException("Task " + (taskIndex + 1) + " does not exist.\n"
-                    + "  You currently have " + tasks.size() + " task(s).");
-        }
+        int taskIndex = parseTaskIndex(arguments, "delete");
         Task removed = tasks.remove(taskIndex);
         System.out.println("Noted. I've removed this task:");
         System.out.println("  " + removed);
         System.out.println("Now you have " + tasks.size() + " tasks in the list.");
     }
 
-    /**
-     * Parses and validates a task index from user input for mark/unmark commands.
-     */
     private static int parseTaskIndex(String arguments, String command) throws YodaException {
         if (arguments.isEmpty()) {
             throw new YodaException("Missing task number!\n"
@@ -199,5 +207,103 @@ public class Yoda {
         System.out.println("Got it. I've added this task:");
         System.out.println("  " + task);
         System.out.println("Now you have " + taskCount + " tasks in the list.");
+    }
+
+    // =========================================================================
+    // STORAGE LOGIC (LEVEL 7)
+    // =========================================================================
+
+    /**
+     * Loads tasks from the hard disk file. Creates file/folder if not present.
+     * Skips corrupted lines.
+     */
+    private static void loadTasksFromDisk() {
+        try {
+            ensureStorageExists();
+            List<String> lines = Files.readAllLines(FILE_PATH);
+            for (String line : lines) {
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                try {
+                    Task task = parseTaskFromLine(line);
+                    if (task != null) {
+                        tasks.add(task);
+                    }
+                } catch (Exception e) {
+                    System.out.println("[Warning] Skipped corrupted data line: " + line);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("[Warning] Failed to load data from " + FILE_PATH);
+        }
+    }
+
+    /**
+     * Saves all current tasks to disk.
+     */
+    private static void saveTasksToDisk() {
+        try {
+            ensureStorageExists();
+            StringBuilder sb = new StringBuilder();
+            for (Task task : tasks) {
+                sb.append(task.toFileFormat()).append(System.lineSeparator());
+            }
+            Files.writeString(FILE_PATH, sb.toString());
+        } catch (IOException e) {
+            System.out.println("OOPS! Error occurred while saving tasks to file: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Creates parent directory and empty file if they do not exist.
+     */
+    private static void ensureStorageExists() throws IOException {
+        if (FILE_PATH.getParent() != null && !Files.exists(FILE_PATH.getParent())) {
+            Files.createDirectories(FILE_PATH.getParent());
+        }
+        if (!Files.exists(FILE_PATH)) {
+            Files.createFile(FILE_PATH);
+        }
+    }
+
+    /**
+     * Parses a single encoded line into a Task object.
+     */
+    private static Task parseTaskFromLine(String line) throws YodaException {
+        String[] parts = line.split(" \\| ");
+        if (parts.length < 3) {
+            throw new YodaException("Corrupted format");
+        }
+
+        String type = parts[0].trim();
+        boolean isDone = parts[1].trim().equals("1");
+        String description = parts[2].trim();
+
+        Task task;
+        switch (type) {
+            case "T":
+                task = new Todo(description);
+                break;
+            case "D":
+                if (parts.length < 4) {
+                    throw new YodaException("Corrupted deadline format");
+                }
+                task = new Deadline(description, parts[3].trim());
+                break;
+            case "E":
+                if (parts.length < 5) {
+                    throw new YodaException("Corrupted event format");
+                }
+                task = new Event(description, parts[3].trim(), parts[4].trim());
+                break;
+            default:
+                throw new YodaException("Unknown task type");
+        }
+
+        if (isDone) {
+            task.markAsDone();
+        }
+        return task;
     }
 }
