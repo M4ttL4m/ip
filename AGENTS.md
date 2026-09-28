@@ -52,3 +52,13 @@ All commit messages proposed or executed **must strictly follow** the project sk
   - Maximum 50 characters for subject line; wrap body lines at 72 characters.
   - Explain *what* and *why*, not just *how*.
   - Keep Java code refactoring and agent/config updates in separate, isolated commits.
+
+### 3. Command-line UI Testing
+After every code update that can affect command-line behaviour:
+
+1. Review and update `test/ui-test-plan.md` when the change affects a
+   documented behaviour or needs regression coverage.
+2. Invoke the project-specific `.agent/skills/test-ui` skill before committing.
+3. Include its console input/output transcript in the completion report.
+   On the first failing case, stop and report the expected and actual output;
+   do not commit the failing change.
