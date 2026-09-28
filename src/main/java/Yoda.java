@@ -2,6 +2,9 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
+/**
+ * Runs the YODA command-line task manager.
+ */
 public class Yoda {
 
     private static final Storage STORAGE = new Storage(Paths.get(".", "data", "yoda.txt"));
@@ -9,7 +12,15 @@ public class Yoda {
     private static final Parser PARSER = new Parser();
 
     /**
+     * Prevents instantiation of this static application entry-point class.
+     */
+    private Yoda() {
+    }
+
+    /**
      * Starts the YODA command-line application.
+     *
+     * @param args command-line arguments, which are not used
      */
     public static void main(String[] args) {
         Ui ui = new Ui();
@@ -90,6 +101,11 @@ public class Yoda {
         }
     }
 
+    /**
+     * Displays every task in the current task list.
+     *
+     * @throws YodaException if the task list is empty
+     */
     private static void handleList() throws YodaException {
         if (tasks.isEmpty()) {
             throw new YodaException("Your task list is empty. Add a task first!");
@@ -100,6 +116,12 @@ public class Yoda {
         }
     }
 
+    /**
+     * Marks a task as completed.
+     *
+     * @param arguments the one-based task number
+     * @throws YodaException if the task number is invalid
+     */
     private static void handleMark(String arguments) throws YodaException {
         int taskIndex = tasks.getTaskIndex(arguments, "mark");
         tasks.get(taskIndex).markAsDone();
@@ -107,6 +129,12 @@ public class Yoda {
         System.out.println("  " + tasks.get(taskIndex));
     }
 
+    /**
+     * Marks a task as incomplete.
+     *
+     * @param arguments the one-based task number
+     * @throws YodaException if the task number is invalid
+     */
     private static void handleUnmark(String arguments) throws YodaException {
         int taskIndex = tasks.getTaskIndex(arguments, "unmark");
         tasks.get(taskIndex).markAsUndone();
@@ -114,6 +142,12 @@ public class Yoda {
         System.out.println("  " + tasks.get(taskIndex));
     }
 
+    /**
+     * Adds a to-do task.
+     *
+     * @param arguments the task description
+     * @throws YodaException if the description is missing
+     */
     private static void handleTodo(String arguments) throws YodaException {
         if (arguments.isEmpty()) {
             throw new YodaException("Missing description!\n"
@@ -148,6 +182,12 @@ public class Yoda {
         printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
     }
 
+    /**
+     * Adds an event task.
+     *
+     * @param arguments the event description and time range
+     * @throws YodaException if the event fields are missing
+     */
     private static void handleEvent(String arguments) throws YodaException {
         if (arguments.isEmpty()) {
             throw new YodaException("Missing description and event times!\n"
@@ -171,6 +211,12 @@ public class Yoda {
         printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
     }
 
+    /**
+     * Removes a task from the list.
+     *
+     * @param arguments the one-based task number
+     * @throws YodaException if the task number is invalid
+     */
     private static void handleDelete(String arguments) throws YodaException {
         if (arguments.isEmpty()) {
             throw new YodaException("Missing task number!\n"
@@ -205,6 +251,12 @@ public class Yoda {
         }
     }
 
+    /**
+     * Displays a confirmation that a task was added.
+     *
+     * @param task the added task
+     * @param taskCount the number of tasks now in the list
+     */
     private static void printAddedTask(Task task, int taskCount) {
         System.out.println("Got it. I've added this task:");
         System.out.println("  " + task);

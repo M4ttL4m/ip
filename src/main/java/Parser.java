@@ -4,6 +4,12 @@
 public class Parser {
 
     /**
+     * Creates a parser for command-line input.
+     */
+    public Parser() {
+    }
+
+    /**
      * Separates a command line into its first word and the remaining text.
      *
      * @param input the trimmed command line entered by the user
