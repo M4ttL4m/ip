@@ -14,7 +14,7 @@ YODA is a task management chatbot that helps you track your todos, deadlines, an
 
 ## Quick Start
 
-1. Ensure you have Java 17 or above installed.
+1. Ensure you have Java 25 or above installed.
 2. Download the latest `yoda.jar` from the releases page.
 3. Run the app with: `java -jar yoda.jar`
 4. Type a command and press Enter to get started!
