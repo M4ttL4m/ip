@@ -1,14 +1,8 @@
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 public class Yoda {
 
-    // OS-independent relative path definition
-    private static final Path FILE_PATH = Paths.get(".", "data", "yoda.txt");
-
+    private static final Storage STORAGE = new Storage(Paths.get(".", "data", "yoda.txt"));
     private static TaskList tasks = new TaskList();
 
     /**
@@ -17,7 +11,7 @@ public class Yoda {
     public static void main(String[] args) {
         Ui ui = new Ui();
         ui.showWelcome();
-        loadTasksFromDisk();
+        tasks = STORAGE.load();
 
         while (ui.hasNextCommand()) {
             String input = ui.readCommand();
@@ -62,27 +56,27 @@ public class Yoda {
                 break;
             case "mark":
                 handleMark(arguments);
-                saveTasksToDisk();
+                STORAGE.save(tasks);
                 break;
             case "unmark":
                 handleUnmark(arguments);
-                saveTasksToDisk();
+                STORAGE.save(tasks);
                 break;
             case "todo":
                 handleTodo(arguments);
-                saveTasksToDisk();
+                STORAGE.save(tasks);
                 break;
             case "deadline":
                 handleDeadline(arguments);
-                saveTasksToDisk();
+                STORAGE.save(tasks);
                 break;
             case "event":
                 handleEvent(arguments);
-                saveTasksToDisk();
+                STORAGE.save(tasks);
                 break;
             case "delete":
                 handleDelete(arguments);
-                saveTasksToDisk();
+                STORAGE.save(tasks);
                 break;
             default:
                 throw new YodaException("Unknown command: \"" + command + "\"\n"
@@ -182,101 +176,4 @@ public class Yoda {
         System.out.println("Now you have " + taskCount + " tasks in the list.");
     }
 
-    // =========================================================================
-    // STORAGE LOGIC (LEVEL 7)
-    // =========================================================================
-
-    /**
-     * Loads tasks from the hard disk file. Creates file/folder if not present.
-     * Skips corrupted lines.
-     */
-    private static void loadTasksFromDisk() {
-        try {
-            ensureStorageExists();
-            List<String> lines = Files.readAllLines(FILE_PATH);
-            for (String line : lines) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-                try {
-                    Task task = parseTaskFromLine(line);
-                    if (task != null) {
-                        tasks.add(task);
-                    }
-                } catch (Exception e) {
-                    System.out.println("[Warning] Skipped corrupted data line: " + line);
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("[Warning] Failed to load data from " + FILE_PATH);
-        }
-    }
-
-    /**
-     * Saves all current tasks to disk.
-     */
-    private static void saveTasksToDisk() {
-        try {
-            ensureStorageExists();
-            StringBuilder sb = new StringBuilder();
-            for (Task task : tasks.getTasks()) {
-                sb.append(task.toFileFormat()).append(System.lineSeparator());
-            }
-            Files.writeString(FILE_PATH, sb.toString());
-        } catch (IOException e) {
-            System.out.println("OOPS! Error occurred while saving tasks to file: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Creates parent directory and empty file if they do not exist.
-     */
-    private static void ensureStorageExists() throws IOException {
-        if (FILE_PATH.getParent() != null && !Files.exists(FILE_PATH.getParent())) {
-            Files.createDirectories(FILE_PATH.getParent());
-        }
-        if (!Files.exists(FILE_PATH)) {
-            Files.createFile(FILE_PATH);
-        }
-    }
-
-    /**
-     * Parses a single encoded line into a Task object.
-     */
-    private static Task parseTaskFromLine(String line) throws YodaException {
-        String[] parts = line.split(" \\| ");
-        if (parts.length < 3) {
-            throw new YodaException("Corrupted format");
-        }
-
-        String type = parts[0].trim();
-        boolean isDone = parts[1].trim().equals("1");
-        String description = parts[2].trim();
-
-        Task task;
-        switch (type) {
-            case "T":
-                task = new Todo(description);
-                break;
-            case "D":
-                if (parts.length < 4) {
-                    throw new YodaException("Corrupted deadline format");
-                }
-                task = new Deadline(description, parts[3].trim());
-                break;
-            case "E":
-                if (parts.length < 5) {
-                    throw new YodaException("Corrupted event format");
-                }
-                task = new Event(description, parts[3].trim(), parts[4].trim());
-                break;
-            default:
-                throw new YodaException("Unknown task type");
-        }
-
-        if (isDone) {
-            task.markAsDone();
-        }
-        return task;
-    }
 }
