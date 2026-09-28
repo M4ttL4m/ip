@@ -4,6 +4,7 @@ public class Yoda {
 
     private static final Storage STORAGE = new Storage(Paths.get(".", "data", "yoda.txt"));
     private static TaskList tasks = new TaskList();
+    private static final Parser PARSER = new Parser();
 
     /**
      * Starts the YODA command-line application.
@@ -19,14 +20,12 @@ public class Yoda {
                 continue;
             }
 
-            String[] parts = input.split(" ", 2);
-            String command = parts[0];
-            String arguments = parts.length > 1 ? parts[1] : "";
+            ParsedCommand parsedCommand = PARSER.parse(input);
 
             ui.showDivider();
 
             try {
-                handleCommand(command, arguments, ui);
+                handleCommand(parsedCommand.getCommand(), parsedCommand.getArguments(), ui);
             } catch (YodaException e) {
                 ui.showError(e.getMessage());
             } catch (NumberFormatException e) {
