@@ -4,16 +4,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 public class Yoda {
-
-    private static final String SEPARATOR = "____________________________________________________________";
-    private static final String BANNER = "__   __  ___  ____    _\n"
-            + "\\ \\ / / / _ \\|  _ \\  / \\\n"
-            + " \\ V / | | | | | | |/ _ \\\n"
-            + "  | |  | |_| | |_| / ___ \\\n"
-            + "  |_|   \\___/|____/_/   \\_\\\n";
 
     // OS-independent relative path definition
     private static final Path FILE_PATH = Paths.get(".", "data", "yoda.txt");
@@ -24,12 +16,12 @@ public class Yoda {
      * Starts the YODA command-line application.
      */
     public static void main(String[] args) {
-        printWelcome();
+        Ui ui = new Ui();
+        ui.showWelcome();
         loadTasksFromDisk();
 
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String input = scanner.nextLine().trim();
+        while (ui.hasNextCommand()) {
+            String input = ui.readCommand();
             if (input.isEmpty()) {
                 continue;
             }
@@ -38,36 +30,32 @@ public class Yoda {
             String command = parts[0];
             String arguments = parts.length > 1 ? parts[1] : "";
 
-            System.out.println(SEPARATOR);
+            ui.showDivider();
 
             try {
-                handleCommand(command, arguments);
+                handleCommand(command, arguments, ui);
             } catch (YodaException e) {
-                System.out.println("OOPS! " + e.getMessage());
+                ui.showError(e.getMessage());
             } catch (NumberFormatException e) {
-                System.out.println("OOPS! That's not a valid number.\n"
-                        + "  Correct format: mark <number>  OR  unmark <number>\n"
-                        + "  Example:        mark 2");
+                ui.showInvalidNumberError();
             }
 
-            System.out.println(SEPARATOR);
+            ui.showDivider();
         }
     }
 
-    private static void printWelcome() {
-        System.out.println(SEPARATOR);
-        System.out.print(BANNER);
-        System.out.println(SEPARATOR);
-        System.out.println("Hello! I'm YODA.");
-        System.out.println("What can I do for you?");
-        System.out.println(SEPARATOR);
-    }
-
-    private static void handleCommand(String command, String arguments) throws YodaException {
+    /**
+     * Performs the action requested by a parsed command.
+     *
+     * @param command the command word entered by the user
+     * @param arguments the text after the command word
+     * @param ui the interface used to display command-specific messages
+     * @throws YodaException if the command or its arguments are invalid
+     */
+    private static void handleCommand(String command, String arguments, Ui ui) throws YodaException {
         switch (command) {
             case "bye":
-                System.out.println("Bye. Hope to see you again soon!");
-                System.out.println(SEPARATOR);
+                ui.showGoodbye();
                 System.exit(0);
                 break;
             case "list":
