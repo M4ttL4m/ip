@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class Storage {
                 }
                 try {
                     loadedTasks.add(parseTaskFromLine(line));
-                } catch (YodaException exception) {
+                } catch (YodaException | DateTimeParseException exception) {
                     System.out.println("[Warning] Skipped corrupted data line: " + line);
                 }
             }
