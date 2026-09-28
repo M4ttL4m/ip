@@ -80,6 +80,22 @@ public class TaskList {
     }
 
     /**
+     * Returns the tasks whose descriptions contain the supplied keyword.
+     *
+     * @param keyword the text to search for
+     * @return the matching tasks, in their original list order
+     */
+    public List<Task> find(String keyword) {
+        List<Task> matchingTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            if (task.containsKeyword(keyword)) {
+                matchingTasks.add(task);
+            }
+        }
+        return matchingTasks;
+    }
+
+    /**
      * Converts a user-entered task number into a validated zero-based index.
      *
      * @param taskNumber the one-based task number entered by the user

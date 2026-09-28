@@ -1,3 +1,5 @@
+import java.util.Locale;
+
 /**
  * Represents one task in the user's task list.
  */
@@ -16,6 +18,16 @@ public class Task {
 
     public void markAsUndone() {
         this.isDone = false;
+    }
+
+    /**
+     * Returns whether this task's description contains the supplied keyword.
+     *
+     * @param keyword the text to search for
+     * @return true if the description contains the keyword, ignoring letter case
+     */
+    public boolean containsKeyword(String keyword) {
+        return description.toLowerCase(Locale.ROOT).contains(keyword.toLowerCase(Locale.ROOT));
     }
 
     /**

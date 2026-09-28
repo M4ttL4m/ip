@@ -81,9 +81,12 @@ public class Yoda {
                 handleDelete(arguments);
                 STORAGE.save(tasks);
                 break;
+            case "find":
+                handleFind(arguments);
+                break;
             default:
                 throw new YodaException("Unknown command: \"" + command + "\"\n"
-                        + "  Available commands: todo, deadline, event, mark, unmark, delete, list, bye");
+                        + "  Available commands: todo, deadline, event, mark, unmark, delete, find, list, bye");
         }
     }
 
@@ -179,6 +182,27 @@ public class Yoda {
         System.out.println("Noted. I've removed this task:");
         System.out.println("  " + removed);
         System.out.println("Now you have " + tasks.size() + " tasks in the list.");
+    }
+
+    /**
+     * Displays the tasks whose descriptions contain a search keyword.
+     *
+     * @param keyword the text to search for
+     * @throws YodaException if no keyword was supplied
+     */
+    private static void handleFind(String keyword) throws YodaException {
+        if (keyword.isEmpty()) {
+            throw new YodaException("Missing search keyword!\n"
+                    + "  Correct format: find <keyword>\n"
+                    + "  Example:        find book");
+        }
+
+        System.out.println("Here are the matching tasks in your list:");
+        int matchNumber = 1;
+        for (Task task : tasks.find(keyword)) {
+            System.out.println(matchNumber + "." + task);
+            matchNumber++;
+        }
     }
 
     private static void printAddedTask(Task task, int taskCount) {
