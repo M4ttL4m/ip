@@ -2,7 +2,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Yoda {
@@ -10,7 +9,7 @@ public class Yoda {
     // OS-independent relative path definition
     private static final Path FILE_PATH = Paths.get(".", "data", "yoda.txt");
 
-    private static ArrayList<Task> tasks = new ArrayList<>();
+    private static TaskList tasks = new TaskList();
 
     /**
      * Starts the YODA command-line application.
@@ -96,20 +95,20 @@ public class Yoda {
             throw new YodaException("Your task list is empty. Add a task first!");
         }
         System.out.println("Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            System.out.println((i + 1) + "." + tasks.get(i));
+        for (int index = 0; index < tasks.size(); index++) {
+            System.out.println((index + 1) + "." + tasks.get(index));
         }
     }
 
     private static void handleMark(String arguments) throws YodaException {
-        int taskIndex = parseTaskIndex(arguments, "mark");
+        int taskIndex = tasks.getTaskIndex(arguments, "mark");
         tasks.get(taskIndex).markAsDone();
         System.out.println("Nice! I've marked this task as done:");
         System.out.println("  " + tasks.get(taskIndex));
     }
 
     private static void handleUnmark(String arguments) throws YodaException {
-        int taskIndex = parseTaskIndex(arguments, "unmark");
+        int taskIndex = tasks.getTaskIndex(arguments, "unmark");
         tasks.get(taskIndex).markAsUndone();
         System.out.println("OK, I've marked this task as not done yet:");
         System.out.println("  " + tasks.get(taskIndex));
@@ -170,25 +169,11 @@ public class Yoda {
                     + "  Correct format: delete <number>\n"
                     + "  Example:        delete 2");
         }
-        int taskIndex = parseTaskIndex(arguments, "delete");
+        int taskIndex = tasks.getTaskIndex(arguments, "delete");
         Task removed = tasks.remove(taskIndex);
         System.out.println("Noted. I've removed this task:");
         System.out.println("  " + removed);
         System.out.println("Now you have " + tasks.size() + " tasks in the list.");
-    }
-
-    private static int parseTaskIndex(String arguments, String command) throws YodaException {
-        if (arguments.isEmpty()) {
-            throw new YodaException("Missing task number!\n"
-                    + "  Correct format: " + command + " <number>\n"
-                    + "  Example:        " + command + " 2");
-        }
-        int taskIndex = Integer.parseInt(arguments) - 1;
-        if (taskIndex < 0 || taskIndex >= tasks.size()) {
-            throw new YodaException("Task " + (taskIndex + 1) + " does not exist.\n"
-                    + "  You currently have " + tasks.size() + " task(s). Please enter a number between 1 and " + tasks.size() + ".");
-        }
-        return taskIndex;
     }
 
     private static void printAddedTask(Task task, int taskCount) {
@@ -234,7 +219,7 @@ public class Yoda {
         try {
             ensureStorageExists();
             StringBuilder sb = new StringBuilder();
-            for (Task task : tasks) {
+            for (Task task : tasks.getTasks()) {
                 sb.append(task.toFileFormat()).append(System.lineSeparator());
             }
             Files.writeString(FILE_PATH, sb.toString());
