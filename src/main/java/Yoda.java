@@ -1,4 +1,6 @@
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 public class Yoda {
 
@@ -30,6 +32,8 @@ public class Yoda {
                 ui.showError(e.getMessage());
             } catch (NumberFormatException e) {
                 ui.showInvalidNumberError();
+            } catch (DateTimeParseException e) {
+                ui.showInvalidDateError();
             }
 
             ui.showDivider();
@@ -117,19 +121,27 @@ public class Yoda {
         printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
     }
 
+    /**
+     * Adds a deadline task using an ISO-formatted due date.
+     *
+     * @param arguments the deadline description and its /by date
+     * @throws YodaException if the deadline fields are missing
+     * @throws DateTimeParseException if the due date is not yyyy-MM-dd
+     */
     private static void handleDeadline(String arguments) throws YodaException {
         if (arguments.isEmpty()) {
             throw new YodaException("Missing description and deadline!\n"
-                    + "  Correct format: deadline <description> /by <time>\n"
-                    + "  Example:        deadline Submit report /by Monday 6pm");
+                    + "  Correct format: deadline <description> /by <yyyy-MM-dd>\n"
+                    + "  Example:        deadline Submit report /by 2019-10-15");
         }
         if (!arguments.contains(" /by ")) {
             throw new YodaException("Missing '/by' field!\n"
-                    + "  Correct format: deadline <description> /by <time>\n"
-                    + "  Example:        deadline Submit report /by Monday 6pm");
+                    + "  Correct format: deadline <description> /by <yyyy-MM-dd>\n"
+                    + "  Example:        deadline Submit report /by 2019-10-15");
         }
         String[] deadlineParts = arguments.split(" /by ", 2);
-        tasks.add(new Deadline(deadlineParts[0], deadlineParts[1]));
+        LocalDate dueDate = LocalDate.parse(deadlineParts[1]);
+        tasks.add(new Deadline(deadlineParts[0], dueDate));
         printAddedTask(tasks.get(tasks.size() - 1), tasks.size());
     }
 

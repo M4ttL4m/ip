@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.time.LocalDate;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -102,7 +103,7 @@ public class Storage {
             if (parts.length < 4) {
                 throw new YodaException("Corrupted deadline format");
             }
-            task = new Deadline(description, parts[3].trim());
+            task = new Deadline(description, LocalDate.parse(parts[3].trim()));
             break;
         case "E":
             if (parts.length < 5) {

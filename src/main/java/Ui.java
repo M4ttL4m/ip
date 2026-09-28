@@ -82,4 +82,12 @@ public class Ui {
                 + "  Correct format: mark <number>  OR  unmark <number>\n"
                 + "  Example:        mark 2");
     }
+
+    /**
+     * Displays the error message used when a deadline date is not ISO-formatted.
+     */
+    public void showInvalidDateError() {
+        System.out.println("OOPS! Please use a date in yyyy-MM-dd format.\n"
+                + "  Example: deadline Submit report /by 2019-10-15");
+    }
 }
