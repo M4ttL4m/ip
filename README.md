@@ -8,7 +8,7 @@ __   __  ___  ____    _
   |_|   \___/|____/_/   \_\
 ```
 
-YODA is a task management chatbot that helps you track your todos, deadlines, and events via a simple command-line interface.
+YODA is a task management chatbot that helps you track your todos, deadlines, and events via a simple command-line interface. :)
 
 ---
 
